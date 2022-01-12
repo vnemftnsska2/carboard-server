@@ -55,7 +55,6 @@ app.get("/api/tasks", (req, res) => {
     `SELECT * FROM ${process.env.DB_NAME}.task ORDER BY created_at DESC`,
     (err, rows, fields) => {
       if (!err) {
-        // console.log(rows);
         res.send(rows);
       } else {
         console.log("query error : " + err);
@@ -110,57 +109,40 @@ app.post("/api/task", (req, res) => {
     paymentCompleted,
   } = req.body;
 
-  console.log("req: ", req.body);
   try {
-    const query = `INSERT INTO ${process.env.DB_NAME}.task
-	(
-		delivery_date,
-		manager,
-		car_master,
-		car_type,
-		customer_name,
-		customer_phone,
-		car_front,
-		car_side_a,
-		car_side_b,
-		car_back,
-		panorama,
-		blackbox,
-		ppf,
-		etc,
-		coil_matt,
-		glass_film,
-		tinting,
-		release_date,
-		release_doc,
-		payment_type,
-		payment_completed
-	)
-	values
-	(
-		"${deliveryDate}",
-		"${manager}",
-		"${carMaster}",
-		"${carType}",
-		"${customerName}",
-		"${customerPhone}",
-		"${carFront}",
-		"${carSideA}",
-		"${carSideB}",
-		"${carBack}",
-		"${panorama}",
-		"${blackBox}",
-		"${ppf}",
-		"${etc}",
-		"${coil}",
-		"${glassFilm}",
-		"${tinting}",
-		"${releaseDate}",
-		"${releaseDoc}",
-		"${paymentType}",
-		"${paymentCompleted}"
-	)`;
-    mariadb.query(query, (err, rows, fields) => {
+    const insertParam = {
+      manager: manager,
+      car_master: carMaster,
+      car_type: carType,
+      customer_name: customerName,
+      customer_phone: customerPhone,
+      car_front: carFront,
+      car_side_a: carSideA,
+      car_side_b: carSideB,
+      car_back: carBack,
+      panorama: panorama,
+      blackbox: blackBox,
+      ppf: ppf,
+      etc: etc,
+      coil_matt: coil,
+      glass_film: glassFilm,
+      tinting: tinting,
+      release_doc: releaseDoc,
+      payment_type: paymentType,
+      payment_completed: paymentCompleted,
+    };
+
+    if (deliveryDate) {
+      insertParam.delivery_date = deliveryDate;
+    }
+
+    if (releaseDate) {
+      insertParam.release_date = releaseDate;
+    }
+
+    const query = `INSERT INTO ${process.env.DB_NAME}.task SET ? `;
+    console.log("PARAM:", insertParam);
+    mariadb.query(query, insertParam, (err, rows, fields) => {
       if (!err) {
         console.log("INSERT SUCCESS");
         res.send(JSON.stringify({ status: 200 }));

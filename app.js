@@ -84,65 +84,13 @@ app.get("/api/leading/:id", (req, res) => {
 });
 
 app.post("/api/task", (req, res) => {
-  console.log("ADD LEADING", req.body);
-  const {
-    deliveryDate,
-    manager,
-    carMaster,
-    carType,
-    customerName,
-    customerPhone,
-    carFront,
-    carSideA,
-    carSideB,
-    carBack,
-    panorama,
-    blackBox,
-    ppf,
-    etc,
-    coil,
-    glassFilm,
-    tinting,
-    releaseDate,
-    releaseDoc,
-    paymentType,
-    paymentCompleted,
-  } = req.body;
-
+  console.log("ADD TASK PARAM:", req.body);
+  const param = req.body;
+  if (!param.delivery_date) param.delivery_date = null;
+  if (!param.release_date) param.release_date = null;
   try {
-    const insertParam = {
-      manager: manager,
-      car_master: carMaster,
-      car_type: carType,
-      customer_name: customerName,
-      customer_phone: customerPhone,
-      car_front: carFront,
-      car_side_a: carSideA,
-      car_side_b: carSideB,
-      car_back: carBack,
-      panorama: panorama,
-      blackbox: blackBox,
-      ppf: ppf,
-      etc: etc,
-      coil_matt: coil,
-      glass_film: glassFilm,
-      tinting: tinting,
-      release_doc: releaseDoc,
-      payment_type: paymentType,
-      payment_completed: paymentCompleted,
-    };
-
-    if (deliveryDate) {
-      insertParam.delivery_date = deliveryDate;
-    }
-
-    if (releaseDate) {
-      insertParam.release_date = releaseDate;
-    }
-
     const query = `INSERT INTO ${process.env.DB_NAME}.task SET ? `;
-    console.log("PARAM:", insertParam);
-    mariadb.query(query, insertParam, (err, rows, fields) => {
+    mariadb.query(query, param, (err, rows, fields) => {
       if (!err) {
         console.log("INSERT SUCCESS");
         res.send(JSON.stringify({ status: 200 }));

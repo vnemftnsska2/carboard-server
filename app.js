@@ -50,7 +50,6 @@ app.post("/api/login", (req, res) => {
 });
 
 app.get("/api/tasks", (req, res) => {
-  console.log("GET TASK LIST");
   mariadb.query(
     `SELECT  *,
         ROW_NUMBER() OVER() as rowno

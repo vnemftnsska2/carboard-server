@@ -52,7 +52,10 @@ app.post("/api/login", (req, res) => {
 app.get("/api/tasks", (req, res) => {
   console.log("GET TASK LIST");
   mariadb.query(
-    `SELECT * FROM ${process.env.DB_NAME}.task ORDER BY created_at DESC`,
+    `SELECT  *,
+        ROW_NUMBER() OVER() as rowno
+        FROM ${process.env.DB_NAME}.task
+        ORDER BY created_at DESC`,
     (err, rows, fields) => {
       if (!err) {
         res.send(rows);

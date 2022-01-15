@@ -51,12 +51,35 @@ app.post("/api/login", (req, res) => {
 
 app.get("/api/tasks", (req, res) => {
   mariadb.query(
-    `SELECT  *,
+    `SELECT
+        idx,
+        DATE_FORMAT(delivery_date, '%Y-%m-%d') as delivery_date,
+        manager,
+        car_master,
+        car_type,
+        customer_name,
+        customer_phone,
+        car_front,
+        car_side_a,
+        car_side_b,
+        car_back,
+        panorama,
+        blackbox,
+        ppf,
+        etc,
+        coil_matt,
+        glass_film,
+        tinting,
+        DATE_FORMAT(release_date, '%Y-%m-%d') as release_date,
+        release_doc,
+        payment_type,
+        payment_completed,
         ROW_NUMBER() OVER() as rowno
         FROM ${process.env.DB_NAME}.task
         ORDER BY created_at DESC`,
     (err, rows, fields) => {
       if (!err) {
+        console.log(rows)
         res.send(rows);
       } else {
         console.log("query error : " + err);
@@ -68,12 +91,33 @@ app.get("/api/tasks", (req, res) => {
 
 app.get("/api/leading/:id", (req, res) => {
   mariadb.query(
-    `
-        SELECT
-            *
-        FROM ${process.env.DB_NAME}.task
-        WHERE id = ${req.params.id}
-        LIMIT 1`,
+    `SELECT
+        idx,
+        DATE_FORMAT(delivery_date, '%Y-%m-%d') as delivery_date,
+        manager,
+        car_master,
+        car_type,
+        customer_name,
+        customer_phone,
+        car_front,
+        car_side_a,
+        car_side_b,
+        car_back,
+        panorama,
+        blackbox,
+        ppf,
+        etc,
+        coil_matt,
+        glass_film,
+        tinting,
+        DATE_FORMAT(release_date, '%Y-%m-%d') as release_date,
+        release_doc,
+        payment_type,
+        payment_completed,
+        ROW_NUMBER() OVER() as rowno
+      FROM ${process.env.DB_NAME}.task
+      WHERE id = ${req.params.id}
+      LIMIT 1`,
     (err, rows, fields) => {
       if (!err) {
         res.send(rows);
@@ -107,40 +151,26 @@ app.post("/api/task", (req, res) => {
   }
 });
 
-app.post("/api/leading/:id", (req, res) => {
-  console.log("UPDATE LEADING");
-  const {
-    code,
-    name,
-    type,
-    strategy,
-    first_price,
-    second_price,
-    third_price,
-    goal_price,
-    loss_price,
-    lead_at,
-    bigo,
-  } = req.body;
-  // const lead_at = moment(req.body.lead_at).format('YYYY-MM-DD');
-  // console.log('req: ', req.body);
+app.post("/api/task/:id", (req, res) => {
+  // console.log("UPDATE TASK PARAM:", req.body);
+  const param = req.body;
+  console.log(param)
+  if (!param.delivery_date) param.delivery_date = null;
+  if (!param.release_date) param.release_date = null;
+
+  const setColumnsQuery = [];
+  for (let column in param) {
+    if (column !== 'idx') {
+      const value = param[column] === null ? param[column] : `"${param[column]}"`;
+      setColumnsQuery.push(`${column} = ${value}`);
+    }
+  }
+  setColumnsQuery.push(`updated_at = NOW()`);
+
   try {
-    const query = `UPDATE ${process.env.DB_NAME}.leading
-        SET 
-            code="${code}",
-            name="${name}",
-            type="${type}",
-            strategy="${strategy}",
-            first_price=${first_price},
-            second_price=${second_price},
-            third_price=${third_price},
-            goal_price="${goal_price}",
-            loss_price=${loss_price},
-            lead_at="${moment(lead_at).format("YYYY-MM-DD")}",
-            bigo="${bigo}",
-            updated_at="${moment().format("YYYY-MM-DD")}"
-        WHERE id=${req.params.id}`;
-    mariadb.query(query, (err, rows, fields) => {
+    const addQuery = `${setColumnsQuery.join(', \n')} where idx = ${param.idx}`;
+    const query = `UPDATE ${process.env.DB_NAME}.task SET ${addQuery}`;
+    mariadb.query(query, param, (err, rows, fields) => {
       if (!err) {
         console.log("UPDATE SUCCESS");
         res.send(JSON.stringify({ status: 200 }));

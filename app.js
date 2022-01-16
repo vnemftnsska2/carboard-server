@@ -49,11 +49,13 @@ app.post("/api/login", (req, res) => {
   // res.send(JSON.stringify({status: 200}))
 });
 
-app.get("/api/tasks", (req, res) => {
+app.get("/api/tasks/t/:type", (req, res) => {
   console.log('GET Task List...')
+  const selectType = parseInt(req.params.type);
   mariadb.query(
     `SELECT
         idx,
+        status,
         DATE_FORMAT(delivery_date, '%Y-%m-%d') as delivery_date,
         manager,
         car_master,
@@ -77,7 +79,8 @@ app.get("/api/tasks", (req, res) => {
         payment_completed,
         ROW_NUMBER() OVER() as rowno
         FROM ${process.env.DB_NAME}.task
-        ORDER BY created_at DESC`,
+        ${selectType > 0 ? `WHERE status = ${selectType}` : ''}
+        ORDER BY payment_completed, created_at DESC`,
     (err, rows, fields) => {
       if (!err) {
         // console.log(rows)
@@ -94,6 +97,7 @@ app.get("/api/leading/:id", (req, res) => {
   mariadb.query(
     `SELECT
         idx,
+        status,
         DATE_FORMAT(delivery_date, '%Y-%m-%d') as delivery_date,
         manager,
         car_master,
@@ -153,9 +157,7 @@ app.post("/api/task", (req, res) => {
 });
 
 app.post("/api/task/:id", (req, res) => {
-  // console.log("UPDATE TASK PARAM:", req.body);
   const param = req.body;
-  console.log(param)
   if (!param.delivery_date) param.delivery_date = null;
   if (!param.release_date) param.release_date = null;
 
@@ -174,6 +176,28 @@ app.post("/api/task/:id", (req, res) => {
     mariadb.query(query, param, (err, rows, fields) => {
       if (!err) {
         console.log("UPDATE SUCCESS");
+        res.send(JSON.stringify({ status: 200 }));
+      } else {
+        console.log(err);
+        res.send(JSON.stringify({ status: 500 }));
+      }
+    });
+  } catch (e) {
+    console.log(e);
+    res.send(JSON.stringify({ status: 500 }));
+  }
+});
+
+app.delete("/api/task/:id", (req, res) => {
+  const taskId = req.params.id;
+  console.log(`DELETE TASK:: ${taskId}`);
+
+  try {
+    const query = `DELETE FROM ${process.env.DB_NAME}.task
+            WHERE idx=${req.params.id}`;
+    mariadb.query(query, (err, rows, fields) => {
+      if (!err) {
+        console.log("DELETE SUCCESS");
         res.send(JSON.stringify({ status: 200 }));
       } else {
         console.log(err);
@@ -213,27 +237,7 @@ app.post("/api/leading/finish/:id", (req, res) => {
   }
 });
 
-app.post("/api/leading/delete/:id", (req, res) => {
-  const stockId = req.params.id;
-  console.log(`DELETE LEADING:: ${stockId}`);
 
-  try {
-    const query = `DELETE FROM ${process.env.DB_NAME}.leading
-            WHERE id=${req.params.id}`;
-    mariadb.query(query, (err, rows, fields) => {
-      if (!err) {
-        console.log("DELETE SUCCESS");
-        res.send(JSON.stringify({ status: 200 }));
-      } else {
-        console.log(err);
-        res.send(JSON.stringify({ status: 500 }));
-      }
-    });
-  } catch (e) {
-    console.log(e);
-    res.send(JSON.stringify({ status: 500 }));
-  }
-});
 
 // Init
 app.use(cors({ origin: "http://localhost:3000" }));

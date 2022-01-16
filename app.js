@@ -50,6 +50,7 @@ app.post("/api/login", (req, res) => {
 });
 
 app.get("/api/tasks", (req, res) => {
+  console.log('GET Task List...')
   mariadb.query(
     `SELECT
         idx,
@@ -79,7 +80,7 @@ app.get("/api/tasks", (req, res) => {
         ORDER BY created_at DESC`,
     (err, rows, fields) => {
       if (!err) {
-        console.log(rows)
+        // console.log(rows)
         res.send(rows);
       } else {
         console.log("query error : " + err);

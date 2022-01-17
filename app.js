@@ -73,9 +73,10 @@ app.get("/api/tasks/t/:type", (req, res) => {
         coil_matt,
         glass_film,
         tinting,
-        DATE_FORMAT(release_date, '%Y-%m-%d') as release_date,
+        DATE_FORMAT(release_date, '%Y-%m-%dT%T') as release_date,
         release_doc,
         payment_type,
+        payment_amount,
         payment_completed,
         ROW_NUMBER() OVER() as rowno
         FROM ${process.env.DB_NAME}.task

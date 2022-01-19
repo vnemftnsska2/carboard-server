@@ -80,8 +80,9 @@ app.get("/api/tasks/t/:type", (req, res) => {
         payment_completed,
         ROW_NUMBER() OVER() as rowno
         FROM ${process.env.DB_NAME}.task
-        ${selectType > 0 ? `WHERE status = ${selectType}` : ''}
-        ORDER BY payment_completed, created_at DESC`,
+        WHERE 1 = 1
+          AND ${selectType > 0 ? `status = ${selectType}` : `status < 5`}
+        ORDER BY field(status,3,2,1,4), created_at DESC`,
     (err, rows, fields) => {
       if (!err) {
         // console.log(rows)

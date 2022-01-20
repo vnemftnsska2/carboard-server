@@ -82,7 +82,7 @@ app.get("/api/tasks/t/:type", (req, res) => {
         FROM ${process.env.DB_NAME}.task
         WHERE 1 = 1
           AND ${selectType > 0 ? `status = ${selectType}` : `status < 5`}
-        ORDER BY field(status,3,2,1,4), delivery_date, created_at DESC`,
+        ORDER BY field(status,3,2,1,4), delivery_date`,
     (err, rows, fields) => {
       if (!err) {
         // console.log(rows)

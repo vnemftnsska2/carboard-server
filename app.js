@@ -50,7 +50,7 @@ app.post("/api/login", (req, res) => {
 });
 
 app.get("/api/tasks/t/:type", (req, res) => {
-  console.log('GET Task List...')
+  console.log("GET Task List...");
   const selectType = parseInt(req.params.type);
   mariadb.query(
     `SELECT
@@ -82,7 +82,7 @@ app.get("/api/tasks/t/:type", (req, res) => {
         FROM ${process.env.DB_NAME}.task
         WHERE 1 = 1
           AND ${selectType > 0 ? `status = ${selectType}` : `status < 5`}
-        ORDER BY field(status,3,2,1,4), created_at DESC`,
+        ORDER BY field(status,3,2,1,4), delivery_date, created_at DESC`,
     (err, rows, fields) => {
       if (!err) {
         // console.log(rows)
@@ -165,15 +165,16 @@ app.post("/api/task/:id", (req, res) => {
 
   const setColumnsQuery = [];
   for (let column in param) {
-    if (column !== 'idx') {
-      const value = param[column] === null ? param[column] : `"${param[column]}"`;
+    if (column !== "idx") {
+      const value =
+        param[column] === null ? param[column] : `"${param[column]}"`;
       setColumnsQuery.push(`${column} = ${value}`);
     }
   }
   setColumnsQuery.push(`updated_at = NOW()`);
 
   try {
-    const addQuery = `${setColumnsQuery.join(', \n')} where idx = ${param.idx}`;
+    const addQuery = `${setColumnsQuery.join(", \n")} where idx = ${param.idx}`;
     const query = `UPDATE ${process.env.DB_NAME}.task SET ${addQuery}`;
     mariadb.query(query, param, (err, rows, fields) => {
       if (!err) {
@@ -238,8 +239,6 @@ app.post("/api/leading/finish/:id", (req, res) => {
     res.send(JSON.stringify({ status: 500 }));
   }
 });
-
-
 
 // Init
 app.use(cors({ origin: "http://localhost:3000" }));

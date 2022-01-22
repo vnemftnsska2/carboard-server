@@ -32,6 +32,12 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
 
+// Cors
+app.use(cors({
+  origin: "*",
+  credentials: true,
+}));
+
 // init test
 app.get("/api", (req, res) => {
   res.send("Hello Express");
@@ -240,8 +246,7 @@ app.post("/api/leading/finish/:id", (req, res) => {
   }
 });
 
-// Init
-app.use(cors({ origin: "http://localhost:3000" }));
+
 app.listen(app.get("port"), () => {
   console.log(app.get("port"), "번 포트에서 대기 중...");
 });

@@ -33,8 +33,7 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     const orgFileName = file.originalname;
-    const saveFileName = `${orgFileName}_${Date.now()}${path.extname(orgFileName)}`;
-    cb(null, saveFileName);
+    cb(null, `${orgFileName.slice(0, -4)}_${Date.now()}${path.extname(orgFileName)}`);
   },
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname);
@@ -66,8 +65,7 @@ app.post("/api/login", (req, res) => {
 
 app.get("/image/:filename", (req, res) => {
   const filename = req.params.filename;
-  console.log(filename);
-  fs.readFile('uploads/'+filename, (err, data) => {
+  fs.readFile(`uploads/${filename}`, (err, data) => {
     if (!err) {
       res.writeHead(200, {"Content-Type": "text/html"});
       res.end(data);
@@ -165,7 +163,6 @@ app.get("/api/leading/:id", (req, res) => {
 });
 
 app.post("/api/task", upload.single('release_img'), (req, res) => {
-  console.log("ADD TASK PARAM:", req.body, req.file?.originalname);
   const param = req.body;
   if (!param.delivery_date) param.delivery_date = null;
   if (!param.release_date) param.release_date = null;
@@ -189,10 +186,11 @@ app.post("/api/task", upload.single('release_img'), (req, res) => {
   }
 });
 
-app.post("/api/task/:id", (req, res) => {
+app.post("/api/task/:id", upload.single('release_img'), (req, res) => {
   const param = req.body;
   if (!param.delivery_date) param.delivery_date = null;
   if (!param.release_date) param.release_date = null;
+  if (req.file) param.release_img = req.file.filename;
 
   const setColumnsQuery = [];
   for (let column in param) {
@@ -203,7 +201,6 @@ app.post("/api/task/:id", (req, res) => {
     }
   }
   setColumnsQuery.push(`updated_at = NOW()`);
-
   try {
     const addQuery = `${setColumnsQuery.join(", \n")} where idx = ${param.idx}`;
     const query = `UPDATE ${process.env.DB_NAME}.task SET ${addQuery}`;
@@ -244,18 +241,12 @@ app.delete("/api/task/:id", (req, res) => {
   }
 });
 
-app.post("/api/leading/finish/:id", (req, res) => {
-  const stockId = req.params.id;
-  console.log(`FINISH LEADING:: ${stockId}`);
-  const { name, type, bigo } = req.body;
-  const finishDate = type === "G" ? req.body.goal_at : req.body.loss_at;
-
+app.delete("/api/task/image/:id", (req, res) => {
+  console.log('Delete Image');
   try {
-    const query = `UPDATE ${process.env.DB_NAME}.leading
-            SET ${type === "G" ? "goal_at" : "loss_at"} = "${moment(
-      finishDate
-    ).format("YYYY-MM-DD")}"
-            WHERE id=${req.params.id}`;
+    const query = `UPDATE ${process.env.DB_NAME}.task
+            SET release_img = ''
+            WHERE idx=${req.params.id}`;
     mariadb.query(query, (err, rows, fields) => {
       if (!err) {
         console.log("DELETE SUCCESS");
@@ -270,7 +261,6 @@ app.post("/api/leading/finish/:id", (req, res) => {
     res.send(JSON.stringify({ status: 500 }));
   }
 });
-
 
 app.listen(app.get("port"), () => {
   console.log(app.get("port"), "번 포트에서 대기 중...");

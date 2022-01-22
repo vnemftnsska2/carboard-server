@@ -162,12 +162,12 @@ app.get("/api/leading/:id", (req, res) => {
   );
 });
 
+//ADD
 app.post("/api/task", upload.single('release_img'), (req, res) => {
   const param = req.body;
   if (!param.delivery_date) param.delivery_date = null;
   if (!param.release_date) param.release_date = null;
   if (req.file) param.release_img = req.file.filename;
-  console.log(JSON.parse(JSON.stringify(param)));
 
   try {
     const query = `INSERT INTO ${process.env.DB_NAME}.task SET ? `;
@@ -186,12 +186,13 @@ app.post("/api/task", upload.single('release_img'), (req, res) => {
   }
 });
 
+//UPDATE
 app.post("/api/task/:id", upload.single('release_img'), (req, res) => {
-  const param = req.body;
-  if (!param.delivery_date) param.delivery_date = null;
-  if (!param.release_date) param.release_date = null;
+  const param = JSON.parse(JSON.stringify(req.body));
+  
+  if (!param.delivery_date || param.delivery_date === 'null') param.delivery_date = null;
+  if (!param.release_date || param.release_date === 'null') param.release_date = null;
   if (req.file) param.release_img = req.file.filename;
-
   const setColumnsQuery = [];
   for (let column in param) {
     if (column !== "idx") {
@@ -219,6 +220,7 @@ app.post("/api/task/:id", upload.single('release_img'), (req, res) => {
   }
 });
 
+//DELETE
 app.delete("/api/task/:id", (req, res) => {
   const taskId = req.params.id;
   console.log(`DELETE TASK:: ${taskId}`);

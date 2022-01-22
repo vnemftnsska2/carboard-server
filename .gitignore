@@ -14,6 +14,9 @@
 #env
 .env
 
+#upload_files
+/uploads
+
 # misc
 .DS_Store
 .env.local

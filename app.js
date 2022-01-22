@@ -12,31 +12,40 @@ const cookieParser = require("cookie-parser");
 // env
 require("dotenv").config();
 
-// FILE
-const storage = multer.diskStorage({
-  destination: "./upload_files/",
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + path.extname(file.originalname));
-  },
-});
-
-const uploader = multer({
-  storage: storage,
-  limits: { fileSize: 1000000 },
-});
-
 // APP
 const app = express();
 app.set("port", process.env.PORT || 3030);
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
+app.use('uploads', express.static('uploads'))
 
 // Cors
 app.use(cors({
   origin: "*",
   credentials: true,
 }));
+
+// FILE
+const storage = multer.diskStorage({
+  destination: (rq, file, cb) => {
+    cb(null, "uploads/");
+  },
+  filename: function (req, file, cb) {
+    const orgFileName = file.originalname;
+    const saveFileName = `${orgFileName}_${Date.now()}${path.extname(orgFileName)}`;
+    cb(null, saveFileName);
+  },
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    if(ext !== '.png' || ext !== '.jpg'){
+        return cb(res.status(400).end('Only png, jpg Are Allowed'), false);
+    } 
+    cb(null, true);
+  }
+});
+
+const upload = multer({ storage: storage, });
 
 // init test
 app.get("/api", (req, res) => {
@@ -53,6 +62,17 @@ app.post("/api/login", (req, res) => {
   //     httpOnly: true,
   // });
   // res.send(JSON.stringify({status: 200}))
+});
+
+app.get("/image/:filename", (req, res) => {
+  const filename = req.params.filename;
+  console.log(filename);
+  fs.readFile('uploads/'+filename, (err, data) => {
+    if (!err) {
+      res.writeHead(200, {"Content-Type": "text/html"});
+      res.end(data);
+    }
+  });
 });
 
 app.get("/api/tasks/t/:type", (req, res) => {
@@ -81,6 +101,7 @@ app.get("/api/tasks/t/:type", (req, res) => {
         tinting,
         DATE_FORMAT(release_date, '%Y-%m-%dT%T') as release_date,
         release_doc,
+        release_img,
         payment_type,
         payment_amount,
         payment_completed,
@@ -125,6 +146,7 @@ app.get("/api/leading/:id", (req, res) => {
         tinting,
         DATE_FORMAT(release_date, '%Y-%m-%d') as release_date,
         release_doc,
+        release_img,
         payment_type,
         payment_completed,
         ROW_NUMBER() OVER() as rowno
@@ -142,14 +164,17 @@ app.get("/api/leading/:id", (req, res) => {
   );
 });
 
-app.post("/api/task", (req, res) => {
-  console.log("ADD TASK PARAM:", req.body);
+app.post("/api/task", upload.single('release_img'), (req, res) => {
+  console.log("ADD TASK PARAM:", req.body, req.file?.originalname);
   const param = req.body;
   if (!param.delivery_date) param.delivery_date = null;
   if (!param.release_date) param.release_date = null;
+  if (req.file) param.release_img = req.file.filename;
+  console.log(JSON.parse(JSON.stringify(param)));
+
   try {
     const query = `INSERT INTO ${process.env.DB_NAME}.task SET ? `;
-    mariadb.query(query, param, (err, rows, fields) => {
+    mariadb.query(query, JSON.parse(JSON.stringify(param)), (err, rows, fields) => {
       if (!err) {
         console.log("INSERT SUCCESS");
         res.send(JSON.stringify({ status: 200 }));

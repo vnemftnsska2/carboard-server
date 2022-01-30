@@ -53,22 +53,36 @@ app.get("/api", (req, res) => {
 
 // Login
 app.post("/api/login", (req, res) => {
-  // 이메일 & 비밀번호 체크
-  // 토큰 생성
-  // const userToken = jwt.sign({ userid: 'admin' }, process.env.JWT_TOKEN);
-  // res.cookie('jwt_auth', userToken, {
-  //     maxAge: 1000 * 60 * 60 * 24 * 7,
-  //     httpOnly: true,
-  // });
-  // res.send(JSON.stringify({status: 200}))
+  const {
+    user_id: userid,
+    password
+  } = req.body;
+
+  mariadb.query(`SELECT count(*) AS CNT
+    FROM ${process.env.DB_NAME}.employee
+    WHERE 1 = 1
+    AND userid = '${userid}'
+    AND password = '${password}'
+    LIMIT 1`, (err, rows, fields) => {
+      if (rows[0].CNT === 1) {
+        const userToken = jwt.sign({ userid: req.userid }, process.env.JWT_TOKEN);
+        res.cookie('jwt_auth', userToken, {
+            maxAge: 1000 * 60 * 60 * 24 * 7,
+            httpOnly: true,
+        });
+        res.send(JSON.stringify({status: 200}))
+      } else if (rows[0].CNT === 0) {
+        res.send(JSON.stringify({status: 401}))
+      }
+  });
 });
 
 app.get("/image/:filename", (req, res) => {
   const filename = req.params.filename;
-  fs.readFile(`uploads/${filename}`, (err, data) => {
+  fs.readFile(`uploads/${filename}`, (err, rows) => {
     if (!err) {
       res.writeHead(200, {"Content-Type": "text/html"});
-      res.end(data);
+      res.end(rows);
     }
   });
 });

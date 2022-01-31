@@ -9,6 +9,9 @@ const path = require("path");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 
+//MiddleWare
+const { auth } = require("./middleware/auth");
+
 // env
 require("dotenv").config();
 
@@ -65,7 +68,7 @@ app.post("/api/login", (req, res) => {
     AND password = '${password}'
     LIMIT 1`, (err, rows, fields) => {
       if (rows[0].CNT === 1) {
-        const userToken = jwt.sign({ userid: req.userid }, process.env.JWT_TOKEN);
+        const userToken = jwt.sign({ userid: req.userid }, process.env.SECRET_ACCESS_TOKEN);
         res.cookie('jwt_auth', userToken, {
             maxAge: 1000 * 60 * 60 * 24 * 7,
             httpOnly: true,
@@ -87,7 +90,7 @@ app.get("/image/:filename", (req, res) => {
   });
 });
 
-app.get("/api/tasks/t/:type", (req, res) => {
+app.get("/api/tasks/t/:type", auth, (req, res) => {
   console.log("GET Task List...");
   const selectType = parseInt(req.params.type);
   mariadb.query(

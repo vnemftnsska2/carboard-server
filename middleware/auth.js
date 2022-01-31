@@ -1,9 +1,12 @@
-const jwt = require('jsonwebtoken');
+const { verify } = require('jsonwebtoken');
 
 const auth = (req, res, next) => {
   const userToken = req.cookies.jwt_auth;
-  jwt.verify(userToken, process.env.JWT_TOKEN, (err, decoded) => {
-    
+  verify(userToken, process.env.SECRET_ACCESS_TOKEN, (err, decoded) => {
+    if (err) {
+      res.status(401).json({error: 'Auth Error From authChecker'});
+    }
+    next();
   });
 }
 

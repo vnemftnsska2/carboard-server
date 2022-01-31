@@ -3,7 +3,6 @@ const mariadb = require("./database/connect/mariadb");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const multer = require("multer");
-const moment = require("moment");
 const fs = require("fs");
 const path = require("path");
 const jwt = require("jsonwebtoken");
@@ -80,7 +79,7 @@ app.post("/api/login", (req, res) => {
   });
 });
 
-app.get("/image/:filename", (req, res) => {
+app.get("/image/:filename", checkAuth, (req, res) => {
   const filename = req.params.filename;
   fs.readFile(`uploads/${filename}`, (err, rows) => {
     if (!err) {
@@ -136,7 +135,7 @@ app.get("/api/tasks/t/:type", checkAuth, (req, res) => {
   );
 });
 
-app.get("/api/leading/:id", (req, res) => {
+app.get("/api/leading/:id", checkAuth, (req, res) => {
   mariadb.query(
     `SELECT
         idx,
@@ -178,7 +177,7 @@ app.get("/api/leading/:id", (req, res) => {
 });
 
 //ADD
-app.post("/api/task", upload.single('release_img'), (req, res) => {
+app.post("/api/task", checkAuth, upload.single('release_img'), (req, res) => {
   const param = req.body;
   if (!param.delivery_date) param.delivery_date = null;
   if (!param.release_date) param.release_date = null;
@@ -202,7 +201,7 @@ app.post("/api/task", upload.single('release_img'), (req, res) => {
 });
 
 //UPDATE
-app.post("/api/task/:id", upload.single('release_img'), (req, res) => {
+app.post("/api/task/:id", checkAuth, upload.single('release_img'), (req, res) => {
   const param = JSON.parse(JSON.stringify(req.body));
   
   if (!param.delivery_date || param.delivery_date === 'null') param.delivery_date = null;

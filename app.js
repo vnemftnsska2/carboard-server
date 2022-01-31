@@ -10,7 +10,7 @@ const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
 
 //MiddleWare
-const { auth } = require("./middleware/auth");
+const { checkAuth } = require("./middleware/auth");
 
 // env
 require("dotenv").config();
@@ -90,7 +90,7 @@ app.get("/image/:filename", (req, res) => {
   });
 });
 
-app.get("/api/tasks/t/:type", auth, (req, res) => {
+app.get("/api/tasks/t/:type", checkAuth, (req, res) => {
   console.log("GET Task List...");
   const selectType = parseInt(req.params.type);
   mariadb.query(

@@ -7,6 +7,7 @@ const fs = require("fs");
 const path = require("path");
 const jwt = require("jsonwebtoken");
 const cookieParser = require("cookie-parser");
+const crypto = require("crypto-js");
 
 //MiddleWare
 const { checkAuth } = require("./middleware/auth");
@@ -64,7 +65,7 @@ app.post("/api/login", (req, res) => {
     FROM ${process.env.DB_NAME}.employee
     WHERE 1 = 1
     AND userid = '${userid}'
-    AND password = '${password}'
+    AND password = '${crypto.AES.decrypt(password, process.env.SECRET_ACCESS_TOKEN).toString(crypto.enc.Utf8)}'
     LIMIT 1`, (err, rows, fields) => {
       if (rows[0].CNT === 1) {
         const userToken = jwt.sign({ userid: req.userid }, process.env.SECRET_ACCESS_TOKEN);

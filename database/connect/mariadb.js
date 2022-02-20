@@ -1,5 +1,5 @@
-const mariadb = require('mysql');
-require('dotenv').config();
+const mariadb = require("mysql");
+require("dotenv").config();
 
 const conn = mariadb.createConnection({
   host: process.env.DB_HOST,
@@ -8,7 +8,7 @@ const conn = mariadb.createConnection({
   password: process.env.DB_PASS,
   database: process.env.DB_NAME,
   waitForConnections: true,
-  dateStrings: 'date'
+  dateStrings: "date",
 });
 
 module.exports = conn;

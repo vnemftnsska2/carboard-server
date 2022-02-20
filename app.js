@@ -21,13 +21,15 @@ app.set("port", process.env.PORT || 3030);
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 app.use(cookieParser());
-app.use('uploads', express.static('uploads'))
+app.use("uploads", express.static("uploads"));
 
 // Cors
-app.use(cors({
-  origin: "*",
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: "*",
+    credentials: true,
+  })
+);
 
 // FILE
 const storage = multer.diskStorage({
@@ -36,55 +38,65 @@ const storage = multer.diskStorage({
   },
   filename: function (req, file, cb) {
     const orgFileName = file.originalname;
-    cb(null, `${orgFileName.slice(0, -4)}_${Date.now()}${path.extname(orgFileName)}`);
+    cb(
+      null,
+      `${orgFileName.slice(0, -4)}_${Date.now()}${path.extname(orgFileName)}`
+    );
   },
   fileFilter: (req, file, cb) => {
     const ext = path.extname(file.originalname);
-    if(ext !== '.png' || ext !== '.jpg'){
-        return cb(res.status(400).end('Only png, jpg Are Allowed'), false);
-    } 
+    if (ext !== ".png" || ext !== ".jpg") {
+      return cb(res.status(400).end("Only png, jpg Are Allowed"), false);
+    }
     cb(null, true);
-  }
+  },
 });
 
-const upload = multer({ storage: storage, });
+const upload = multer({ storage: storage });
 
 // init test
 app.get("/api", (req, res) => {
   res.send("Hello Express");
 });
 
+
 // Login
 app.post("/api/login", (req, res) => {
-  const {
-    user_id: userid,
-    password
-  } = req.body;
+  const { user_id: userid, password } = req.body;
 
-  mariadb.query(`SELECT count(*) AS CNT
+  mariadb.query(
+    `SELECT count(*) AS CNT
     FROM ${process.env.DB_NAME}.employee
     WHERE 1 = 1
     AND userid = '${userid}'
-    AND password = '${crypto.AES.decrypt(password, process.env.SECRET_ACCESS_TOKEN).toString(crypto.enc.Utf8)}'
-    LIMIT 1`, (err, rows, fields) => {
+    AND password = '${crypto.AES.decrypt(
+      password,
+      process.env.SECRET_ACCESS_TOKEN
+    ).toString(crypto.enc.Utf8)}'
+    LIMIT 1`,
+    (err, rows, fields) => {
       if (rows[0].CNT === 1) {
-        const userToken = jwt.sign({ userid: req.userid }, process.env.SECRET_ACCESS_TOKEN);
-        res.cookie('jwt_auth', userToken, {
-            maxAge: 1000 * 60 * 60 * 24 * 7,
-            httpOnly: true,
+        const userToken = jwt.sign(
+          { userid: req.userid },
+          process.env.SECRET_ACCESS_TOKEN
+        );
+        res.cookie("jwt_auth", userToken, {
+          maxAge: 1000 * 60 * 60 * 24 * 7,
+          httpOnly: true,
         });
-        res.send(JSON.stringify({status: 200}))
+        res.send(JSON.stringify({ status: 200 }));
       } else if (rows[0].CNT === 0) {
-        res.send(JSON.stringify({status: 401}))
+        res.send(JSON.stringify({ status: 401 }));
       }
-  });
+    }
+  );
 });
 
 app.get("/image/:filename", checkAuth, (req, res) => {
   const filename = req.params.filename;
   fs.readFile(`uploads/${filename}`, (err, rows) => {
     if (!err) {
-      res.writeHead(200, {"Content-Type": "text/html"});
+      res.writeHead(200, { "Content-Type": "text/html" });
       res.end(rows);
     }
   });
@@ -178,7 +190,7 @@ app.get("/api/leading/:id", checkAuth, (req, res) => {
 });
 
 //ADD
-app.post("/api/task", checkAuth, upload.single('release_img'), (req, res) => {
+app.post("/api/task", checkAuth, upload.single("release_img"), (req, res) => {
   const param = req.body;
   if (!param.delivery_date) param.delivery_date = null;
   if (!param.release_date) param.release_date = null;
@@ -186,15 +198,19 @@ app.post("/api/task", checkAuth, upload.single('release_img'), (req, res) => {
 
   try {
     const query = `INSERT INTO ${process.env.DB_NAME}.task SET ? `;
-    mariadb.query(query, JSON.parse(JSON.stringify(param)), (err, rows, fields) => {
-      if (!err) {
-        console.log("INSERT SUCCESS");
-        res.send(JSON.stringify({ status: 200 }));
-      } else {
-        console.log(err);
-        res.send(JSON.stringify({ status: 500 }));
+    mariadb.query(
+      query,
+      JSON.parse(JSON.stringify(param)),
+      (err, rows, fields) => {
+        if (!err) {
+          console.log("INSERT SUCCESS");
+          res.send(JSON.stringify({ status: 200 }));
+        } else {
+          console.log(err);
+          res.send(JSON.stringify({ status: 500 }));
+        }
       }
-    });
+    );
   } catch (e) {
     console.log(e);
     res.send(JSON.stringify({ status: 500 }));
@@ -202,38 +218,47 @@ app.post("/api/task", checkAuth, upload.single('release_img'), (req, res) => {
 });
 
 //UPDATE
-app.post("/api/task/:id", checkAuth, upload.single('release_img'), (req, res) => {
-  const param = JSON.parse(JSON.stringify(req.body));
-  
-  if (!param.delivery_date || param.delivery_date === 'null') param.delivery_date = null;
-  if (!param.release_date || param.release_date === 'null') param.release_date = null;
-  if (req.file) param.release_img = req.file.filename;
-  const setColumnsQuery = [];
-  for (let column in param) {
-    if (column !== "idx") {
-      const value =
-        param[column] === null ? param[column] : `"${param[column]}"`;
-      setColumnsQuery.push(`${column} = ${value}`);
+app.post(
+  "/api/task/:id",
+  checkAuth,
+  upload.single("release_img"),
+  (req, res) => {
+    const param = JSON.parse(JSON.stringify(req.body));
+
+    if (!param.delivery_date || param.delivery_date === "null")
+      param.delivery_date = null;
+    if (!param.release_date || param.release_date === "null")
+      param.release_date = null;
+    if (req.file) param.release_img = req.file.filename;
+    const setColumnsQuery = [];
+    for (let column in param) {
+      if (column !== "idx") {
+        const value =
+          param[column] === null ? param[column] : `"${param[column]}"`;
+        setColumnsQuery.push(`${column} = ${value}`);
+      }
+    }
+    setColumnsQuery.push(`updated_at = NOW()`);
+    try {
+      const addQuery = `${setColumnsQuery.join(", \n")} where idx = ${
+        param.idx
+      }`;
+      const query = `UPDATE ${process.env.DB_NAME}.task SET ${addQuery}`;
+      mariadb.query(query, param, (err, rows, fields) => {
+        if (!err) {
+          console.log("UPDATE SUCCESS");
+          res.send(JSON.stringify({ status: 200 }));
+        } else {
+          console.log(err);
+          res.send(JSON.stringify({ status: 500 }));
+        }
+      });
+    } catch (e) {
+      console.log(e);
+      res.send(JSON.stringify({ status: 500 }));
     }
   }
-  setColumnsQuery.push(`updated_at = NOW()`);
-  try {
-    const addQuery = `${setColumnsQuery.join(", \n")} where idx = ${param.idx}`;
-    const query = `UPDATE ${process.env.DB_NAME}.task SET ${addQuery}`;
-    mariadb.query(query, param, (err, rows, fields) => {
-      if (!err) {
-        console.log("UPDATE SUCCESS");
-        res.send(JSON.stringify({ status: 200 }));
-      } else {
-        console.log(err);
-        res.send(JSON.stringify({ status: 500 }));
-      }
-    });
-  } catch (e) {
-    console.log(e);
-    res.send(JSON.stringify({ status: 500 }));
-  }
-});
+);
 
 //DELETE
 app.delete("/api/task/:id", (req, res) => {
@@ -259,7 +284,7 @@ app.delete("/api/task/:id", (req, res) => {
 });
 
 app.delete("/api/task/image/:id", (req, res) => {
-  console.log('Delete Image');
+  console.log("Delete Image");
   try {
     const query = `UPDATE ${process.env.DB_NAME}.task
             SET release_img = ''

@@ -1,8 +1,6 @@
-import { Router } from "express";
-const router = Router();
+const AppRoutes = require("express").Router();
+const { login } = require("../controllers/app.controller");
 
-import { login } from "../controllers/app.controller";
+AppRoutes.route("/login").post(login);
 
-router.route("/login").post(login);
-
-export default AppRoutes;
+module.exports = AppRoutes;

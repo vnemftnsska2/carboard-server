@@ -1,8 +1,10 @@
-const mariadb = require("./database/connect/mariadb");
+const mariadb = require("../../database/connect/mariadb");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto-js");
+
 require("dotenv").config();
 
-export function login(req, res) {
+function login(req, res) {
   const { user_id: userid, password } = req.body;
   mariadb.query(
     `SELECT count(*) AS CNT
@@ -31,3 +33,5 @@ export function login(req, res) {
     }
   );
 }
+
+module.exports = { login };

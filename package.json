@@ -17,10 +17,10 @@
   "name": "carboard-server",
   "version": "1.0.0",
   "description": "CarBoard Server",
-  "main": "app.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon app"
+    "start": "nodemon src/index.js"
   },
   "author": "tnsska2",
   "license": "ISC",

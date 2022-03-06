@@ -59,7 +59,6 @@ app.get("/api", (req, res) => {
   res.send("Hello Express");
 });
 
-
 // Login
 app.post("/api/login", (req, res) => {
   const { user_id: userid, password } = req.body;
@@ -84,9 +83,9 @@ app.post("/api/login", (req, res) => {
           maxAge: 1000 * 60 * 60 * 24 * 7,
           httpOnly: true,
         });
-        res.send(JSON.stringify({ status: 200 }));
+        return res.send(JSON.stringify({ status: 200 }));
       } else if (rows[0].CNT === 0) {
-        res.send(JSON.stringify({ status: 401 }));
+        return res.send(JSON.stringify({ status: 401 }));
       }
     }
   );
@@ -142,47 +141,6 @@ app.get("/api/tasks/t/:type", checkAuth, (req, res) => {
         res.send(rows);
       } else {
         console.log("query error : " + err);
-        res.send(err);
-      }
-    }
-  );
-});
-
-app.get("/api/leading/:id", checkAuth, (req, res) => {
-  mariadb.query(
-    `SELECT
-        idx,
-        status,
-        DATE_FORMAT(delivery_date, '%Y-%m-%d') as delivery_date,
-        manager,
-        car_master,
-        car_type,
-        customer_name,
-        customer_phone,
-        car_front,
-        car_side_a,
-        car_side_b,
-        car_back,
-        panorama,
-        blackbox,
-        ppf,
-        etc,
-        coil_matt,
-        glass_film,
-        tinting,
-        DATE_FORMAT(release_date, '%Y-%m-%d') as release_date,
-        release_img,
-        payment_type,
-        payment_completed,
-        ROW_NUMBER() OVER() as rowno
-      FROM ${process.env.DB_NAME}.task
-      WHERE id = ${req.params.id}
-      LIMIT 1`,
-    (err, rows, fields) => {
-      if (!err) {
-        res.send(rows);
-      } else {
-        console.log("query error : ", err);
         res.send(err);
       }
     }
@@ -298,6 +256,34 @@ app.delete("/api/task/image/:id", (req, res) => {
         res.send(JSON.stringify({ status: 500 }));
       }
     });
+  } catch (e) {
+    console.log(e);
+    res.send(JSON.stringify({ status: 500 }));
+  }
+});
+
+//Add Brand
+app.post("/api/brand", checkAuth, (req, res) => {
+  const param = req.body;
+  if (!param.delivery_date) param.delivery_date = null;
+  if (!param.release_date) param.release_date = null;
+  if (req.file) param.release_img = req.file.filename;
+
+  try {
+    const query = `INSERT INTO ${process.env.DB_NAME}.task SET ? `;
+    mariadb.query(
+      query,
+      JSON.parse(JSON.stringify(param)),
+      (err, rows, fields) => {
+        if (!err) {
+          console.log("INSERT SUCCESS");
+          res.send(JSON.stringify({ status: 200 }));
+        } else {
+          console.log(err);
+          res.send(JSON.stringify({ status: 500 }));
+        }
+      }
+    );
   } catch (e) {
     console.log(e);
     res.send(JSON.stringify({ status: 500 }));

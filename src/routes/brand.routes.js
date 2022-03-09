@@ -1,8 +1,8 @@
-const express = require("express");
-const router = express.Router();
+const BrandRouter = require("express").Router();
+const { getBrandList, addBrand } = require("../controllers/brand.controller");
 
-import { getTask } from "../controllers/barnd.controller";
+BrandRouter.route("/brand").get(getBrandList);
+BrandRouter.route("/brand/:id").get(getBrandList);
+BrandRouter.route("/brand").post(addBrand);
 
-router.route("/brand").get(getTask);
-
-export default router;
+module.exports = BrandRouter;

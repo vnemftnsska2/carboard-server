@@ -74,7 +74,6 @@ function addTask(req, res) {
 
 function updateTask(req, res) {
   const param = JSON.parse(JSON.stringify(req.body));
-
   if (!param.delivery_date || param.delivery_date === "null")
     param.delivery_date = null;
   if (!param.release_date || param.release_date === "null")
@@ -107,4 +106,53 @@ function updateTask(req, res) {
   }
 }
 
-module.exports = { getTaskList, addTask, updateTask };
+function deleteTask(res, req) {
+  const taskId = req.params.id;
+  console.log(`DELETE TASK:: ${taskId}`);
+
+  try {
+    const query = `DELETE FROM ${process.env.DB_NAME}.task
+            WHERE idx=${req.params.id}`;
+    mariadb.query(query, (err, rows, fields) => {
+      if (!err) {
+        console.log("DELETE SUCCESS");
+        res.send(JSON.stringify({ status: 200 }));
+      } else {
+        console.log(err);
+        res.send(JSON.stringify({ status: 500 }));
+      }
+    });
+  } catch (e) {
+    console.log(e);
+    res.send(JSON.stringify({ status: 500 }));
+  }
+}
+
+function deleteTaskImg(res, req) {
+  console.log("Delete Image");
+  try {
+    const query = `UPDATE ${process.env.DB_NAME}.task
+            SET release_img = ''
+            WHERE idx=${req.params.id}`;
+    mariadb.query(query, (err, rows, fields) => {
+      if (!err) {
+        console.log("DELETE SUCCESS");
+        res.send(JSON.stringify({ status: 200 }));
+      } else {
+        console.log(err);
+        res.send(JSON.stringify({ status: 500 }));
+      }
+    });
+  } catch (e) {
+    console.log(e);
+    res.send(JSON.stringify({ status: 500 }));
+  }
+}
+
+module.exports = {
+  getTaskList,
+  addTask,
+  updateTask,
+  deleteTask,
+  deleteTaskImg,
+};

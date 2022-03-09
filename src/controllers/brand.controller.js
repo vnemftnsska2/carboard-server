@@ -1,22 +1,29 @@
 const mariadb = require("../../database/connect/mariadb");
 
-const getBrandList = async (req, res) => {
-  const ret = await mariadb.query("SELECT * FROM product_brand");
-  return res.json(ret[0]);
+const getBrandList = (req, res) => {
+  console.log("GET Brand List...");
+  const ret = mariadb.query(
+    "SELECT * FROM product_brand",
+    (err, rows, fields) => {
+      if (!err) {
+        res.send(rows);
+      } else {
+        console.log("DB ERROR: ", err);
+        res.send(err);
+      }
+    }
+  );
 };
 
-const findOneBrand = async (req, res) => {
-  const ret = await mariadb.query("SELECT * FROM product_brand");
-  return res.json(ret[0]);
-};
-
-const addBrand = async (req, res) => {
+const addBrand = (req, res) => {
   const newBrand = req.body;
-  const conn = await connect();
-  await mariadb.query("INSERT INTO product_brand SET ?", [newTask]);
-  return res.json({
-    message: "Create Brand",
-  });
+  try {
+    mariadb.query(`INSERT INTO product_brand SET ? `, newBrand);
+    return res.json({ status: 200, message: "Create Brand" });
+  } catch (e) {
+    console.log(e);
+    return res.json({ status: 500 });
+  }
 };
 
-module.exports = { getBrandList, findOneBrand, addBrand };
+module.exports = { getBrandList, addBrand };

@@ -2,9 +2,6 @@ const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
 const bodyParser = require("body-parser");
-const multer = require("multer");
-const fs = require("fs");
-const path = require("path");
 const cookieParser = require("cookie-parser");
 const { checkAuth } = require("../middleware/auth");
 
@@ -12,6 +9,7 @@ const { checkAuth } = require("../middleware/auth");
 const AppRouter = require("./routes/app.routes");
 const FileRouter = require("./routes/file.routes");
 const TaskRouter = require("./routes/task.routes");
+const BrandRouter = require("./routes/brand.routes");
 
 class App {
   constructor() {
@@ -43,6 +41,7 @@ class App {
   routes() {
     this.app.use("/api", AppRouter);
     this.app.use("/api", TaskRouter);
+    this.app.use("/api", BrandRouter);
     this.app.use(FileRouter);
   }
 

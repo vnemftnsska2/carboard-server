@@ -1,5 +1,11 @@
 const TaskRoutes = require("express").Router();
-const { getTaskList, addTask } = require("../controllers/task.controller");
+const {
+  getTaskList,
+  addTask,
+  updateTask,
+  deleteTask,
+  deleteTaskImg,
+} = require("../controllers/task.controller");
 
 //Middleware
 const multer = require("multer");
@@ -29,5 +35,8 @@ const upload = multer({ storage: storage });
 
 TaskRoutes.route("/tasks/t/:type").get(getTaskList);
 TaskRoutes.route("/task").post(upload.single("release_img"), addTask);
+TaskRoutes.route("/task/:id").post(upload.single("release_img"), updateTask);
+TaskRoutes.route("/task/:id").delete(deleteTask);
+TaskRoutes.route("/task/image/:id").delete(deleteTaskImg);
 
 module.exports = TaskRoutes;

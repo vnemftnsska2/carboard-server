@@ -5,7 +5,25 @@ const crypto = require("crypto-js");
 require("dotenv").config();
 
 function login(req, res) {
-  const { user_id: userid, password } = req.body;
+  const { userid, password } = req.body;
+  console.log(userid, password)
+  const users = {
+    admin: { userid, title: '관리자', auth: 'manager' },
+    editor: { userid, title: '에디터', auth: 'editor' },
+    viewer: { userid, title: '뷰어', auth: 'viewer' },
+  };
+
+  const passwords = {
+    admin: 'qwe123!@#', editor: 'editor123!', viewer: 'viewer123!',
+  }
+
+  if (users[userid] && passwords[userid] === password) {
+    res.status(200).json(users[userid]);
+  } else {
+    res.status(401).json({ message: '로그인 정보를 확인해주시기 바랍니다.' })
+  }
+
+  /*
   mariadb.query(
     `SELECT count(*) AS CNT
     FROM ${process.env.DB_NAME}.employee
@@ -32,6 +50,7 @@ function login(req, res) {
       }
     }
   );
+  */
 }
 
 module.exports = { login };

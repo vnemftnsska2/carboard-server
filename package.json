@@ -2,10 +2,11 @@
   "dependencies": {
     "bcrypt": "^5.0.1",
     "body-parser": "^1.19.1",
+    "connect-history-api-fallback": "^2.0.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "crypto-js": "^4.1.1",
-    "dotenv": "^10.0.0",
+    "dotenv": "^16.0.3",
     "express": "^4.17.2",
     "express-session": "^1.17.2",
     "jsonwebtoken": "^8.5.1",
@@ -17,10 +18,11 @@
   "name": "carboard-server",
   "version": "1.0.0",
   "description": "CarBoard Server",
-  "main": "src/index.js",
+  "main": "web.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon src/index.js"
+    "dev": "nodemon web.js",
+    "start": "node web.js"
   },
   "author": "tnsska2",
   "license": "ISC",

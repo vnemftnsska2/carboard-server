@@ -4,6 +4,7 @@ const cors = require("cors");
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const { checkAuth } = require("../middleware/auth");
+const history = require('connect-history-api-fallback')
 
 //Router
 const AppRouter = require("./routes/app.routes");
@@ -43,6 +44,11 @@ class App {
     this.app.use("/api", TaskRouter);
     this.app.use("/api", BrandRouter);
     this.app.use(FileRouter);
+
+    //SPA-Router 404Error 방지
+    this.app.use(history())
+    this.app.use(express.static(global.clientPath));
+    this.app.use(express.static(global.clientIndex));
   }
 
   async listen() {

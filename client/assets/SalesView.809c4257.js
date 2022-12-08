@@ -1,0 +1,1 @@
+import{_ as t,l as s,B as o,s as e,v as n}from"./index.133bc6b1.js";const c={},a={class:"content"},_=e("h2",{class:"content-heading"},[n("Your Content "),e("small",null,"Subtitle")],-1),l=e("p",null,"...",-1),r=[_,l];function d(i,h){return s(),o("div",a,r)}const f=t(c,[["render",d]]);export{f as default};

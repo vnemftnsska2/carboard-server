@@ -9,11 +9,11 @@
 /coverage
 
 # production
-/build
-# /client
+#/build
+#/client
 
 #env
-# .env
+#.env
 
 #upload_files
 /uploads

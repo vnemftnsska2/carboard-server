@@ -33,7 +33,7 @@ function getTaskList(req, res) {
         FROM task
         WHERE 1 = 1
           AND ${selectType > 0 ? `status = ${selectType}` : `status < 5`}
-        ORDER BY field(status,3,2,1,4), delivery_date DESC`,
+        ORDER BY field(status, 3, 2, 1, 4), delivery_date DESC`,
     (err, rows, fields) => {
       if (!err) {
         res.send(rows);
@@ -47,6 +47,7 @@ function getTaskList(req, res) {
 
 function addTask(req, res) {
   const param = req.body;
+  console.log('addTask:', param)
   if (!param.delivery_date) param.delivery_date = null;
   if (!param.release_date) param.release_date = null;
   if (req.file) param.release_img = req.file.filename;
@@ -59,10 +60,12 @@ function addTask(req, res) {
       (err, rows, fields) => {
         if (!err) {
           console.log("INSERT SUCCESS");
-          res.send(JSON.stringify({ status: 200 }));
+          console.log("INSERT SUCCESS!?!?!?!?");
+          res.status(200).json({ message: '작업지시서가 등록되었습니다.'});
         } else {
           console.log(err);
-          res.send(JSON.stringify({ status: 500 }));
+          const { code, sqlMessage } = err;
+          res.status(500).json({ code, message: sqlMessage });
         }
       }
     );
@@ -74,61 +77,66 @@ function addTask(req, res) {
 
 function updateTask(req, res) {
   const param = JSON.parse(JSON.stringify(req.body));
-  if (!param.delivery_date || param.delivery_date === "null")
-    param.delivery_date = null;
-  if (!param.release_date || param.release_date === "null")
-    param.release_date = null;
+  if (!param.delivery_date || param.delivery_date === "null") param.delivery_date = null;
+  if (!param.release_date || param.release_date === "null") param.release_date = null;
   if (req.file) param.release_img = req.file.filename;
-  const setColumnsQuery = [];
-  for (let column in param) {
-    if (column !== "idx") {
-      const value =
-        param[column] === null ? param[column] : `"${param[column]}"`;
-      setColumnsQuery.push(`${column} = ${value}`);
+
+  //Setting Parameter
+  const setValues = [];
+  const setQuestionColumns = [];
+  Object.entries(param).forEach(([column, value]) => {
+    if (!['idx', 'rowno'].includes(column)) {
+      setValues.push(value);
+      setQuestionColumns.push(`${column} = ?`);
     }
-  }
-  setColumnsQuery.push(`updated_at = NOW()`);
+  });
+
+  // setColumnsQuery.push(`updated_at = NOW()`);
   try {
-    const addQuery = `${setColumnsQuery.join(", \n")} where idx = ${param.idx}`;
-    const query = `UPDATE ${process.env.DB_NAME}.task SET ${addQuery}`;
-    mariadb.query(query, param, (err, rows, fields) => {
+    console.log('updateTask', setQuestionColumns.length, setValues.length);
+    const query = [];
+    query.push(`UPDATE ${process.env.DB_NAME}.task`);
+    query.push(`SET`);
+    query.push(setQuestionColumns.join(", "));
+    query.push(`WHERE idx = ?`);
+    setValues.push(param.idx);
+    console.log('query: ', query.join(' '));
+    console.log('setValues: ', setValues);
+    mariadb.query(query.join(' '), setValues, (err, rows, fields) => {
       if (!err) {
-        console.log("UPDATE SUCCESS");
-        res.send(JSON.stringify({ status: 200 }));
+        res.status(200).json({ message: `NO. ${param.idx} 수정이 완료되었습니다.`});
       } else {
-        console.log(err);
-        res.send(JSON.stringify({ status: 500 }));
+        const { code, sqlMessage } = err;
+        res.status(500).json({ code, message: sqlMessage });
       }
     });
   } catch (e) {
     console.log(e);
-    res.send(JSON.stringify({ status: 500 }));
+    res.status(500).json({ message: '작업지시서 수정 중 문제가 발생하였습니다.' });
   }
 }
 
-function deleteTask(res, req) {
+function deleteTask(req, res) {
   const taskId = req.params.id;
-  console.log(`DELETE TASK:: ${taskId}`);
-
+  console.log(`*** DELETE TASK:: ${ taskId }`);
   try {
-    const query = `DELETE FROM ${process.env.DB_NAME}.task
-            WHERE idx=${req.params.id}`;
-    mariadb.query(query, (err, rows, fields) => {
+    const query = `DELETE FROM ${process.env.DB_NAME}.task WHERE idx= ?`;
+    mariadb.query(query, [ taskId ],  (err, rows, fields) => {
       if (!err) {
         console.log("DELETE SUCCESS");
-        res.send(JSON.stringify({ status: 200 }));
+        res.status(200).json({ message: `NO.${taskId} 작업지시서가 삭제되었습니다.`});
       } else {
-        console.log(err);
-        res.send(JSON.stringify({ status: 500 }));
+        const { code, sqlMessage } = err;
+        res.status(500).json({ code, message: sqlMessage });
       }
     });
   } catch (e) {
     console.log(e);
-    res.send(JSON.stringify({ status: 500 }));
+    res.status(500).json({ code: 'Server Exception', message: 'ERROR...' })
   }
 }
 
-function deleteTaskImg(res, req) {
+function deleteTaskImg(req, res) {
   console.log("Delete Image");
   try {
     const query = `UPDATE ${process.env.DB_NAME}.task
@@ -139,8 +147,8 @@ function deleteTaskImg(res, req) {
         console.log("DELETE SUCCESS");
         res.send(JSON.stringify({ status: 200 }));
       } else {
-        console.log(err);
-        res.send(JSON.stringify({ status: 500 }));
+        const { code, sqlMessage } = err;
+        res.status(500).json({ code, message: sqlMessage });
       }
     });
   } catch (e) {

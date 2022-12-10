@@ -31,11 +31,13 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage: storage });
+const upload = multer({ storage });
 
 TaskRoutes.route("/tasks/t/:type").get(getTaskList);
-TaskRoutes.route("/task").post(upload.single("release_img"), addTask);
-TaskRoutes.route("/task/:id").post(upload.single("release_img"), updateTask);
+// TaskRoutes.route("/task").post(upload.single("release_img"), addTask);
+TaskRoutes.route("/task").post(addTask);
+// TaskRoutes.route("/task/:id").post(upload.single("release_img"), updateTask);
+TaskRoutes.route("/task/:id").post(updateTask);
 TaskRoutes.route("/task/:id").delete(deleteTask);
 TaskRoutes.route("/task/image/:id").delete(deleteTaskImg);
 
